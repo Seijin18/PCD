@@ -1,0 +1,241 @@
+# ============================================
+# .gitignore - Projeto K-Means 1D OpenMP
+# ============================================
+
+# Executáveis Windows
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Arquivos de compilação
+*.o
+*.obj
+*.a
+*.lib
+
+# Arquivos temporários de compilação
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Arquivos de debugging
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# ============================================
+# Dados Grandes (CSV)
+# ============================================
+# Descomente as linhas abaixo se quiser versionar apenas arquivos pequenos
+
+# Arquivos CSV
+
+*.csv
+
+# ============================================
+# Python
+# ============================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# ============================================
+# IDEs e Editores
+# ============================================
+
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# JetBrains (CLion, PyCharm, etc.)
+.idea/
+*.iml
+*.iws
+cmake-build-*/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.*.sw?
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ============================================
+# Sistema Operacional
+# ============================================
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ============================================
+# Resultados e Visualizações
+# ============================================
+
+# Imagens geradas (descomente se não quiser versionar)
+# *.png
+# *.jpg
+# *.jpeg
+# resultados_kmeans.png
+# tabela_resultados.png
+# convergencia.png
+
+# PDFs de relatórios gerados
+# *.pdf
+
+# ============================================
+# Logs e Temporários
+# ============================================
+
+# Arquivos de log
+*.log
+*.tmp
+*.temp
+*.cache
+
+# Arquivos de backup
+*.bak
+*.backup
+*~
+
+# Arquivos de profiling
+*.prof
+gmon.out
+perf.data*
+cachegrind.out.*
+
+# ============================================
+# Testes e Benchmarks
+# ============================================
+
+# Resultados de testes
+test_results/
+benchmark_results/
+*.test
+*.bench
+
+# ============================================
+# Documentação Temporária
+# ============================================
+
+# LaTeX temporários
+*.aux
+*.lof
+*.lot
+*.fls
+*.toc
+*.fmt
+*.fot
+*.cb
+*.cb2
+.*.lb
+
+# Markdown temporários
+*.md.backup
+
+# ============================================
+# Específico do Projeto
+# ============================================
+
+# Arquivos de experimentos antigos
+*_old.*
+*_backup.*
+*_v[0-9].*
+
+# Diretórios de resultados antigos
+old_results/
+backup/
+archive/
+
+# Dados de teste temporários
+test_data/
+temp_data/
+
+# ============================================
+# OpenMP e Compilação
+# ============================================
+
+# Arquivos intermediários do GCC
+*.d
+*.gcda
+*.gcno
+*.gcov
+
+# Core dumps
+core
+core.*
+
+# Assembly gerados
+*.s
+*.asm
+
+# ============================================
+# Git específico
+# ============================================
+
+# Patches
+*.patch
+*.diff
+
+# ============================================
+# Notas e TODO
+# ============================================
+
+# Arquivos de notas pessoais (descomente se necessário)
+# NOTES.md
+# TODO.txt
+# notes.txt
+
+# ============================================
+# Fim do .gitignore
+# ============================================

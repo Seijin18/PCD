@@ -1,4 +1,4 @@
-# Projeto K-Means 1D - OpenMP (VERSÃO OTIMIZADA)
+# Projeto K-Means 1D - OpenMP
 
 Implementação **otimizada** do algoritmo K-Means 1D com paralelização OpenMP para a disciplina de Programação Concorrente e Distribuída.
 
@@ -155,7 +155,3 @@ E(T) = S(T) / T × 100%
 - A versão serial usa `clock()` da stdlib
 - Ambas as versões garantem resultados determinísticos com mesma seed
 - SSE é calculado a cada iteração para monitoramento de convergência
-
-## Autores
-
-Projeto desenvolvido para a disciplina de Programação Concorrente e Distribuída.

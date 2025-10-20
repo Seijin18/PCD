@@ -163,6 +163,7 @@ test_results/
 benchmark_results/
 *.test
 *.bench
+Teste/
 
 # ============================================
 # Documentação Temporária

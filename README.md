@@ -3,6 +3,7 @@
 Implementação **otimizada** do algoritmo K-Means 1D com paralelização OpenMP para a disciplina de Programação Concorrente e Distribuída.
 
 ## 🎯 Resultados Principais
+Processador: i7-9750H (6 núcleos, 12 threads), 16GB RAM
 - ✅ **Speedup:** 4.24x com 16 threads
 - ✅ **Eficiência:** 97% com 2 threads, 76% com 4 threads
 - ✅ **Dataset:** 5 milhões de pontos, 20 clusters

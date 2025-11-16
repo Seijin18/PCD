@@ -343,7 +343,10 @@ int main(int argc, char *argv[]) {
     int num_block_sizes = 5;
     int best_block_size = 256;
     float best_time = 1e20f;
-
+    
+    // Armazenar resultados dos testes
+    float block_size_times[5];
+    
     for (int bs_idx = 0; bs_idx < num_block_sizes; bs_idx++) {
         int block_size = block_sizes[bs_idx];
         
@@ -372,6 +375,7 @@ int main(int argc, char *argv[]) {
         float test_time;
         CUDA_CHECK(cudaEventElapsedTime(&test_time, test_start, test_stop));
         test_time /= 5.0;  // Tempo médio
+        block_size_times[bs_idx] = test_time;
 
         printf("  Block size %3d: %.3f ms/iteração", block_size, test_time);
         
@@ -387,7 +391,18 @@ int main(int argc, char *argv[]) {
         CUDA_CHECK(cudaEventDestroy(test_stop));
     }
 
-    printf("\nMelhor block size: %d (%.3f ms)\n\n", best_block_size, best_time);
+    printf("Melhor block size: %d (%.3f ms)\n\n", best_block_size, best_time);
+    
+    // Salvar resultados de teste de block sizes
+    FILE *block_size_file = fopen("results/block_size_test.csv", "w");
+    if (block_size_file) {
+        fprintf(block_size_file, "block_size,time_ms\n");
+        for (int bs_idx = 0; bs_idx < num_block_sizes; bs_idx++) {
+            fprintf(block_size_file, "%d,%.6f\n", block_sizes[bs_idx], block_size_times[bs_idx]);
+        }
+        fclose(block_size_file);
+        printf("Resultados de block size salvos em: results/block_size_test.csv\n\n");
+    }
 
     // ===================================
     // ALGORITMO K-MEANS COM BLOCK SIZE OTIMIZADO
@@ -519,12 +534,106 @@ int main(int argc, char *argv[]) {
     printf("Tempo médio/iteração: %.3f ms\n", kernel_time_ms / iter);
 
     // Salvar resultados
-    save_assignments("assign_cuda.csv", model_host.assignments, dataset.N);
-    save_centroids("centroids_cuda.csv", model_host.centroids, K);
-    printf("\nResultados salvos em: assign_cuda.csv e centroids_cuda.csv\n");
+    save_assignments("results/assign_cuda.csv", model_host.assignments, dataset.N);
+    save_centroids("results/centroids_cuda.csv", model_host.centroids, K);
+    printf("\nResultados salvos em: results/assign_cuda.csv e results/centroids_cuda.csv\n");
+
+    // ===================================
+    // VALIDAÇÃO DE CORRETUDE (vs Versão Serial)
+    // ===================================
+    
+    printf("\n=== VALIDAÇÃO DE CORRETUDE ===\n");
+    
+    // Verificar se arquivos sequenciais existem
+    FILE *seq_assign_file = fopen("results/assign_seq.csv", "r");
+    FILE *seq_centroids_file = fopen("results/centroids_seq.csv", "r");
+    
+    if (seq_assign_file && seq_centroids_file) {
+        printf("Comparando com versão sequencial...\n");
+        
+        // Ler atribuições sequenciais
+        int *assign_seq = (int *)malloc(dataset.N * sizeof(int));
+        for (int i = 0; i < dataset.N; i++) {
+            if (fscanf(seq_assign_file, "%d", &assign_seq[i]) != 1) {
+                fprintf(stderr, "Erro ao ler atribuições sequenciais\n");
+                break;
+            }
+        }
+        
+        // Ler centróides sequenciais
+        double *centroids_seq = (double *)malloc(K * sizeof(double));
+        for (int k = 0; k < K; k++) {
+            if (fscanf(seq_centroids_file, "%lf", &centroids_seq[k]) != 1) {
+                fprintf(stderr, "Erro ao ler centróides sequenciais\n");
+                break;
+            }
+        }
+        
+        // Comparar atribuições
+        int mismatches = 0;
+        for (int i = 0; i < dataset.N; i++) {
+            if (assign_seq[i] != model_host.assignments[i]) {
+                mismatches++;
+            }
+        }
+        
+        double assign_match_rate = 100.0 * (dataset.N - mismatches) / dataset.N;
+        printf("Atribuições: %.2f%% de match (%d diferenças em %d pontos)\n",
+               assign_match_rate, mismatches, dataset.N);
+        
+        // Comparar centróides
+        double max_centroid_diff = 0.0;
+        for (int k = 0; k < K; k++) {
+            double diff = fabs(model_host.centroids[k] - centroids_seq[k]);
+            if (diff > max_centroid_diff) {
+                max_centroid_diff = diff;
+            }
+        }
+        
+        printf("Centróides: diferença máxima = %.10e\n", max_centroid_diff);
+        
+        if (assign_match_rate >= 95.0 && max_centroid_diff < 1e-4) {
+            printf("✓ Validação PASSOU - Resultados coerentes com versão serial\n");
+        } else if (assign_match_rate >= 80.0 && max_centroid_diff < 1e-2) {
+            printf("⚠ Validação PARCIAL - Pequenas diferenças (podem ser aceitáveis)\n");
+        } else {
+            printf("✗ Validação FALHOU - Grandes diferenças detectadas\n");
+        }
+        
+        // Salvar relatório de validação
+        FILE *validation_file = fopen("results/validation_cuda.txt", "w");
+        if (validation_file) {
+            fprintf(validation_file, "=== RELATÓRIO DE VALIDAÇÃO CUDA vs SEQUENCIAL ===\n\n");
+            fprintf(validation_file, "Atribuições: %.2f%% de match (%d diferenças em %d pontos)\n",
+                    assign_match_rate, mismatches, dataset.N);
+            fprintf(validation_file, "Centróides: diferença máxima = %.10e\n\n", max_centroid_diff);
+            
+            if (assign_match_rate >= 95.0 && max_centroid_diff < 1e-4) {
+                fprintf(validation_file, "Status: PASSOU\n");
+                fprintf(validation_file, "Descrição: Resultados coerentes com versão serial\n");
+            } else if (assign_match_rate >= 80.0 && max_centroid_diff < 1e-2) {
+                fprintf(validation_file, "Status: PARCIAL\n");
+                fprintf(validation_file, "Descrição: Pequenas diferenças (podem ser aceitáveis)\n");
+            } else {
+                fprintf(validation_file, "Status: FALHOU\n");
+                fprintf(validation_file, "Descrição: Grandes diferenças detectadas\n");
+            }
+            fclose(validation_file);
+        }
+        
+        free(assign_seq);
+        free(centroids_seq);
+    } else {
+        printf("Arquivos sequenciais não encontrados - pulando validação\n");
+    }
+    
+    if (seq_assign_file) fclose(seq_assign_file);
+    if (seq_centroids_file) fclose(seq_centroids_file);
+    
+    printf("\n");
 
     // Salvar métricas em arquivo
-    FILE *metrics_file = fopen("metrics_cuda.txt", "w");
+    FILE *metrics_file = fopen("results/metrics_cuda.txt", "w");
     if (metrics_file) {
         fprintf(metrics_file, "=== MÉTRICAS DE DESEMPENHO CUDA ===\n");
         fprintf(metrics_file, "GPU: %s\n", prop.name);
@@ -540,6 +649,28 @@ int main(int argc, char *argv[]) {
         fprintf(metrics_file, "TOTAL: %.3f ms\n\n", total_time_ms);
         fprintf(metrics_file, "Throughput: %.2f M pontos/segundo\n", throughput / 1e6);
         fclose(metrics_file);
+    }
+    
+    // Salvar métricas em CSV para análise
+    FILE *metrics_csv = fopen("results/metrics_cuda.csv", "w");
+    if (metrics_csv) {
+        fprintf(metrics_csv, "metric,value,unit\n");
+        fprintf(metrics_csv, "gpu_name,%s,\n", prop.name);
+        fprintf(metrics_csv, "compute_capability,%d.%d,\n", prop.major, prop.minor);
+        fprintf(metrics_csv, "block_size_optimized,%d,threads\n", block_size);
+        fprintf(metrics_csv, "num_points,%d,\n", dataset.N);
+        fprintf(metrics_csv, "num_clusters,%d,\n", K);
+        fprintf(metrics_csv, "num_iterations,%d,\n", iter);
+        fprintf(metrics_csv, "sse_final,%.10f,\n", prev_sse);
+        fprintf(metrics_csv, "time_h2d,%.3f,ms\n", h2d_time_ms);
+        fprintf(metrics_csv, "time_kernels,%.3f,ms\n", kernel_time_ms);
+        fprintf(metrics_csv, "time_d2h,%.3f,ms\n", d2h_time_ms);
+        fprintf(metrics_csv, "time_total,%.3f,ms\n", total_time_ms);
+        fprintf(metrics_csv, "throughput,%.2f,Mpoints/s\n", throughput / 1e6);
+        fprintf(metrics_csv, "throughput_points,%.2f,points/s\n", throughput);
+        fprintf(metrics_csv, "time_per_iteration,%.3f,ms\n", kernel_time_ms / iter);
+        fclose(metrics_csv);
+        printf("Métricas detalhadas salvos em: metrics_cuda.csv\n");
     }
 
     // Limpar memória GPU

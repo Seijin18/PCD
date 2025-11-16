@@ -1,0 +1,15 @@
+metric,value,unit
+gpu_name,NVIDIA GeForce GTX 1660 Ti,
+compute_capability,7.5,
+block_size_optimized,64,threads
+num_points,100000,
+num_clusters,20,
+num_iterations,100,
+sse_final,1954712.3544188247,
+time_h2d,0.177,ms
+time_kernels,93.329,ms
+time_d2h,0.283,ms
+time_total,93.789,ms
+throughput,107.15,Mpoints/s
+throughput_points,107148319.64,points/s
+time_per_iteration,0.933,ms

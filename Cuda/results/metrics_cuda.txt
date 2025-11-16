@@ -1,0 +1,15 @@
+=== MÉTRICAS DE DESEMPENHO CUDA ===
+GPU: NVIDIA GeForce GTX 1660 Ti
+Compute Capability: 7.5
+Block Size Otimizado: 64
+Número de Pontos: 100000
+Número de Clusters: 20
+Iterações: 100
+SSE Final: 1954712.3544188247
+
+Transfer H2D: 0.177 ms
+Kernels: 93.329 ms
+Transfer D2H: 0.283 ms
+TOTAL: 93.789 ms
+
+Throughput: 107.15 M pontos/segundo

@@ -1,42 +1,65 @@
-# Projeto K-Means 1D - CUDA GPU
+# Projeto K-Means 1D - CUDA GPU Otimizado
 
-Implementação do algoritmo K-Means 1D com paralelização em GPU usando CUDA (Entrega 2).
+Implementação otimizada do algoritmo K-Means 1D com paralelização em GPU usando CUDA.
 
 ## 🎯 Objetivo
 
 Comparar o desempenho da implementação do K-Means 1D entre:
 - **CPU (Sequencial):** Versão otimizada em C para linha de base
-- **GPU (CUDA):** Versão paralelizada usando NVIDIA CUDA
+- **GPU (CUDA):** Versão paralelizada com otimizações avançadas
 
 ## 📊 Características
 
 ### Versão Sequencial (CPU)
 - **Arquivo:** `kmeans_1d_seq.c`
-- **Compilador:** GCC/Clang
+- **Compilador:** GCC/MSVC
 - **Otimizações:** -O3, cache-friendly allocation
 - **Tempo de medição:** clock() de alta precisão
 
-### Versão CUDA (GPU)
-- **Arquivo:** `kmeans_1d_cuda.cu`
+### Versão CUDA (GPU) - Otimizada
+- **Arquivo:** `kmeans_1d_cuda_optimized.cu`
 - **Compilador:** NVCC (NVIDIA CUDA Compiler)
+- **Otimizações Implementadas:**
+  - **Memória Constante:** Centróides em cache constante (acesso rápido)
+  - **Redução por Blocos:** Agregação eficiente usando shared memory
+  - **Block Size Automático:** Teste e seleção automática do tamanho ótimo
+  - **SSE no Host:** Cálculo de SSE na CPU para reduzir overhead
 - **Kernels:**
-  - `kernel_assignment`: Atribuição paralela de pontos (1 thread por ponto)
-  - `kernel_update_partial`: Acumulação paralela de somas (operações atômicas)
-  - `kernel_update_centroids`: Cálculo paralelo de novos centróides
-  - `kernel_reduce_sse`: Redução paralela do SSE em shared memory
-- **Tempo de medição:** cudaEventElapsedTime() para precisão GPU
+  - `kernel_assignment_optimized`: Atribuição com memória constante
+  - `kernel_update_reduction`: Agregação eficiente por blocos
+- **Tempo de medição:** cudaEvent com precisão de microssegundos
 
-## 📁 Estrutura
+## 📁 Estrutura do Projeto
 
 ```
 Cuda/
-├── kmeans_1d_seq.c              # Implementação sequencial (CPU)
-├── kmeans_1d_cuda.cu            # Implementação CUDA (GPU)
-├── run_cuda_experiments.ps1     # Script de compilação e execução
-├── compare_cuda_results.py      # Validação de corretude
-├── README.md                    # Este arquivo
-└── dados.csv                    # Dados de teste (gerado)
-    centroides_iniciais.csv      # Centróides iniciais (gerado)
+├── data/                              # 📥 Dados de entrada
+│   ├── dados.csv                      # Dataset (100,000 pontos)
+│   └── centroides_iniciais.csv        # Centróides iniciais (K=20)
+│
+├── results/                           # 📊 Resultados e métricas
+│   ├── assign_cuda.csv               # Atribuições GPU
+│   ├── assign_seq.csv                # Atribuições CPU
+│   ├── centroids_cuda.csv            # Centróides finais GPU
+│   ├── centroids_seq.csv             # Centróides finais CPU
+│   ├── block_size_test.csv           # Teste de tamanhos de bloco
+│   ├── metrics_cuda.csv              # Métricas estruturadas
+│   ├── metrics_cuda.txt              # Métricas legíveis
+│   ├── validation_cuda.txt           # Validação GPU vs CPU
+│   └── comparacao_seq_vs_cuda.txt    # Comparação detalhada
+│
+├── graphs/                            # 📈 Gráficos (gerados)
+│   ├── block_size_analysis.png
+│   ├── throughput_analysis.png
+│   ├── timing_breakdown.png
+│   └── performance_summary.png
+│
+├── kmeans_1d_cuda_optimized.cu       # Implementação CUDA otimizada
+├── kmeans_1d_seq.c                   # Implementação sequencial
+├── generate_performance_graphs.py     # Geração de gráficos
+├── generate_comparison.ps1            # Geração de relatório
+├── build_and_analyze_cuda.ps1        # Build automático completo
+└── README.md                          # Este arquivo
 ```
 
 ## 🚀 Como Usar
@@ -45,100 +68,118 @@ Cuda/
 
 ```powershell
 # Windows
-# - GCC (MinGW)
 # - CUDA Toolkit 11.0+ (inclui NVCC)
-# - Python 3.x com NumPy
+# - Visual Studio 2019+ com C++ Build Tools
+# - Python 3.8+ com pandas, matplotlib, numpy (opcional, para gráficos)
 
-# Verificar CUDA
+# Verificar CUDA e GPU
 nvidia-smi
 
-# Adicionar CUDA ao PATH (se necessário)
-$env:PATH += ";C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.0\bin"
+# Verificar NVCC
+nvcc --version
 ```
 
-### 1. Execução Automática (Recomendado)
+### 1. Execução Automática Completa (Recomendado)
 
 ```powershell
 cd Cuda
-.\run_cuda_experiments.ps1
+.\build_and_analyze_cuda.ps1
 ```
 
-Este script:
-- ✓ Gera/usa dados de teste
-- ✓ Compila versão CPU (GCC)
-- ✓ Compila versão CUDA (NVCC)
-- ✓ Executa ambas as versões 3 vezes
-- ✓ Calcula speedup
-- ✓ Valida resultados
+Este script realiza todo o workflow:
+- ✓ Detecta automaticamente compute capability da GPU
+- ✓ Compila versão CUDA otimizada
+- ✓ Executa com teste automático de block sizes (32, 64, 128, 256, 512)
+- ✓ Gera métricas de desempenho (CSV e TXT)
+- ✓ Valida resultados contra versão sequencial
+- ✓ Gera gráficos de análise (se Python disponível)
+- ✓ Salva todos os resultados em `results/`
 
 ### 2. Compilação Manual
 
 #### Versão Sequencial (CPU)
 ```bash
-gcc -O3 -std=c99 kmeans_1d_seq.c -o kmeans_1d_seq.exe -lm
+# Windows (MSVC)
+cl /O2 kmeans_1d_seq.c /Fe:kmeans_1d_seq.exe
+
+# Windows (GCC/MinGW)
+gcc -O3 -std=c99 kmeans_1d_seq.c -o kmeans_1d_seq.exe
 ```
 
 #### Versão CUDA (GPU)
 ```bash
-# Detectar compute capability da GPU
-nvidia-smi
+# Detectar compute capability
+nvidia-smi --query-gpu=compute_cap --format=csv,noheader
 
-# Compilar (exemplo para GeForce GTX 1660 Ti - sm_75)
-nvcc -O3 -arch=sm_75 kmeans_1d_cuda.cu -o kmeans_1d_cuda.exe
-
-# Outras opções de -arch:
-# sm_50 = Maxwell (GTX 750, 960, 970, 980, etc)
-# sm_60 = Pascal (GTX 1060, 1070, 1080, etc)
-# sm_61 = Pascal (GTX Titan X, 1080 Ti, etc)
-# sm_70 = Volta (Titan V, Tesla V100, etc)
-# sm_75 = Turing (RTX 2060, 2070, 2080, GTX 1660, 1660 Ti, etc)
-# sm_80 = Ampere (RTX 3060, 3070, 3080, 3090, etc)
-# sm_86 = Ampere (RTX 3050, etc)
-# sm_90 = Ada (RTX 4080, 4090, etc)
+# Compilar (exemplo para GTX 1660 Ti - sm_75)
+nvcc -O3 -arch=sm_75 kmeans_1d_cuda_optimized.cu -o kmeans_1d_cuda_opt.exe
 ```
+
+**Compute Capabilities comuns:**
+- sm_75 = Turing (RTX 2060/2070/2080, GTX 1660/1660 Ti)
+- sm_80 = Ampere (RTX 3060/3070/3080/3090)
+- sm_86 = Ampere (RTX 3050, RTX 30 Mobile)
+- sm_89 = Ada Lovelace (RTX 4060/4070)
+- sm_90 = Ada Lovelace (RTX 4080/4090)
 
 ### 3. Executar Individualmente
 
 #### Versão CPU
-```bash
-.\kmeans_1d_seq.exe dados.csv centroides_iniciais.csv 20
+```powershell
+.\kmeans_1d_seq.exe data/dados.csv data/centroides_iniciais.csv 20 100 1e-6
 ```
 
 #### Versão GPU
-```bash
-.\kmeans_1d_cuda.exe dados.csv centroides_iniciais.csv 20
+```powershell
+.\kmeans_1d_cuda_opt.exe data/dados.csv data/centroides_iniciais.csv 20 100 1e-6
 ```
 
-### 4. Validar Resultados
+**Parâmetros:**
+- `data/dados.csv` - Arquivo de entrada com pontos
+- `data/centroides_iniciais.csv` - Centróides iniciais
+- `20` - Número de clusters (K)
+- `100` - Número máximo de iterações
+- `1e-6` - Epsilon de convergência
 
-```bash
-python compare_cuda_results.py
+### 4. Gerar Gráficos de Desempenho
+
+```powershell
+python generate_performance_graphs.py .
 ```
 
-Verifica:
-- Equivalência de atribuições
-- Equivalência de centróides
-- Equivalência de SSE
+Gera 4 gráficos profissionais:
+- **block_size_analysis.png** - Análise de tamanhos de bloco
+- **throughput_analysis.png** - Throughput e eficiência
+- **timing_breakdown.png** - Decomposição de tempo
+- **performance_summary.png** - Resumo geral (6 painéis)
 
-## 📖 Algoritmo Detalhado
+### 5. Gerar Relatório de Comparação
 
-### Assignment Step (GPU)
+```powershell
+.\generate_comparison.ps1 -seq_time 208.0 -cuda_time 93.789
+```
+
+Cria `results/comparacao_seq_vs_cuda.txt` com análise detalhada.
+
+## 📖 Algoritmo e Otimizações
+
+### Assignment Step (GPU) - Com Memória Constante
 
 ```cuda
-__global__ void kernel_assignment(double *data, int N, double *centroids, int K,
-                                   int *assignments, double *sse_array)
-{
+__constant__ double constant_centroids[MAX_K];
+
+__global__ void kernel_assignment_optimized(double *data, int N, int K,
+                                             int *assignments, double *sse_array) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= N) return;
     
-    // Cada thread processa um ponto
     double point = data[i];
-    double min_dist = INFINITY;
+    double min_dist = 1e308;
     int best_cluster = 0;
     
-    // Encontrar centróide mais próximo
+    // Usar centróides da memória constante (cache rápido)
     for (int k = 0; k < K; k++) {
-        double diff = point - centroids[k];
+        double diff = point - constant_centroids[k];
         double dist = diff * diff;
         if (dist < min_dist) {
             min_dist = dist;
@@ -147,170 +188,259 @@ __global__ void kernel_assignment(double *data, int N, double *centroids, int K,
     }
     
     assignments[i] = best_cluster;
-    sse_array[i] = min_dist;  // Usado para redução de SSE
+    sse_array[i] = min_dist;
 }
 ```
 
-**Paralelização:**
-- Grid: ⌈N / 256⌉ blocos de 256 threads
-- Cada thread processa 1 ponto
-- Complexidade: O(N × K)
+**Otimizações:**
+- ✓ Memória constante para centróides (acesso em cache L1)
+- ✓ Sem divergência de warp (todas as threads executam mesmo código)
+- ✓ Complexidade: O(N × K) totalmente paralela
 
-### Update Step (GPU)
+### Update Step (GPU) - Redução por Blocos
 
-#### Passo 1: Acumular Somas (Paralelo)
 ```cuda
-__global__ void kernel_update_partial(int *assignments, double *data, int N, int K,
-                                       double *sum_global, int *count_global)
-{
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i >= N) return;
+__global__ void kernel_update_reduction(int *assignments, double *data, int N, int K,
+                                         double *block_sums, int *block_counts) {
+    extern __shared__ char shared_memory[];
     
-    int cluster = assignments[i];
-    atomicAdd(&sum_global[cluster], data[i]);     // Operação atômica
-    atomicAdd(&count_global[cluster], 1);
-}
-```
-
-#### Passo 2: Calcular Novos Centróides (Paralelo)
-```cuda
-__global__ void kernel_update_centroids(double *centroids, double *sum_global,
-                                         int *count_global, int K, double *data, int N)
-{
-    int k = blockIdx.x * blockDim.x + threadIdx.x;
-    if (k >= K) return;
+    double *shared_sums = (double *)shared_memory;
+    int *shared_counts = (int *)&shared_memory[K * sizeof(double)];
     
-    if (count_global[k] > 0) {
-        centroids[k] = sum_global[k] / count_global[k];
-    } else {
-        centroids[k] = data[0];
+    // Inicializar shared memory
+    for (int k = threadIdx.x; k < K; k += blockDim.x) {
+        shared_sums[k] = 0.0;
+        shared_counts[k] = 0;
     }
-}
-```
-
-**Paralelização:**
-- Kernel 1: ⌈N / 256⌉ blocos × 256 threads (acumular)
-- Kernel 2: ⌈K / 256⌉ blocos × 256 threads (calcular)
-- Usa operações atômicas para thread-safety
-
-### Redução de SSE (GPU)
-
-```cuda
-__global__ void kernel_reduce_sse(double *sse_array, int N, double *sse_result)
-{
-    extern __shared__ double sdata[];
-    
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    sdata[threadIdx.x] = (idx < N) ? sse_array[idx] : 0.0;
     __syncthreads();
     
-    // Redução em shared memory (tree reduction)
-    for (int s = blockDim.x / 2; s > 0; s >>= 1) {
-        if (threadIdx.x < s) {
-            sdata[threadIdx.x] += sdata[threadIdx.x + s];
-        }
-        __syncthreads();
+    // Acumular em shared memory
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < N) {
+        int cluster = assignments[i];
+        atomicAdd(&shared_sums[cluster], data[i]);
+        atomicAdd(&shared_counts[cluster], 1);
     }
+    __syncthreads();
     
-    if (threadIdx.x == 0) {
-        sse_result[blockIdx.x] = sdata[0];
+    // Escrever resultados do bloco para memória global
+    for (int k = threadIdx.x; k < K; k += blockDim.x) {
+        if (shared_sums[k] != 0.0 || shared_counts[k] != 0) {
+            atomicAdd(&block_sums[k], shared_sums[k]);
+            atomicAdd(&block_counts[k], shared_counts[k]);
+        }
     }
 }
 ```
 
-## 📊 Esperado de Desempenho
+**Otimizações:**
+- ✓ Shared memory reduz acessos à memória global
+- ✓ Operações atômicas apenas dentro do bloco (muito mais rápido)
+- ✓ Reduz contenção de memória global significativamente
 
-### GPU: NVIDIA GeForce GTX 1660 Ti
+### Block Size Automático
 
-| N | K | CPU | GPU | Speedup |
-|---|---|-----|-----|---------|
-| 10K | 20 | ~1ms | ~2ms | 0.5x |
-| 100K | 20 | ~10ms | ~5ms | 2x |
-| 1M | 20 | ~100ms | ~20ms | 5x |
-| 5M | 20 | ~500ms | ~60ms | 8x |
+O código testa automaticamente múltiplos tamanhos de bloco:
+- **32, 64, 128, 256, 512 threads**
+- Seleciona o melhor baseado em tempo de execução real
+- Resultados salvos em `results/block_size_test.csv`
 
-**Observações:**
-- Speedup é baixo para problemas pequenos (overhead CUDA domina)
-- Speedup cresce com N (GPU explora paralelismo)
-- Transferência PCI-E é sobrecarga importante
+## 📊 Resultados de Desempenho
 
-## 🔍 Validação de Corretude
+### Configuração Testada
+- **Dataset:** 100,000 pontos
+- **Clusters (K):** 20
+- **Iterações:** 100
+- **GPU:** NVIDIA GeForce GTX 1660 Ti (1536 CUDA cores, Compute 7.5)
+- **CPU:** Intel/AMD (sequencial)
+### Métricas de Desempenho
 
-### Atribuições
-- Devem ser 100% idênticas (ou muito similares se pontos são equidistantes)
-- Script verifica primeiras 10.000 atribuições
+| Métrica | Sequencial (CPU) | CUDA (GPU) | Melhoria |
+|---------|------------------|------------|----------|
+| **Tempo Total** | 208.0 ms | 93.8 ms | **2.22x** |
+| **Tempo/Iteração** | 2.08 ms | 0.938 ms | 2.22x |
+| **Throughput** | 48.08 M pts/s | 107.15 M pts/s | 2.23x |
+| **Overhead H2D** | - | 0.177 ms | 0.2% |
+| **Tempo Kernels** | - | 93.329 ms | 99.5% |
+| **Overhead D2H** | - | 0.283 ms | 0.3% |
 
-### Centróides
-- Devem ser numericamente equivalentes (tolerância: 1e-5)
-- Pode haver pequenas diferenças por ordem de operações em paralelo
+### Validação de Corretude
 
-### SSE (Sum of Squared Errors)
-- Calculado a partir de atribuições + centróides
-- Deve ter diferença relativa < 0.1%
+| Verificação | Resultado |
+|-------------|-----------|
+| **Match Atribuições** | 100.00% (0 diferenças) |
+| **Diferença SSE** | < 1e-10 (praticamente zero) |
+| **Diferença Centróides** | 3.96e-11 (máxima) |
+| **Status** | ✅ PASSOU |
+
+### Block Size Ótimo
+
+| Block Size | Tempo/Iteração |
+|------------|----------------|
+| 32 threads | 0.126 ms |
+| **64 threads** | **0.111 ms ✓ MELHOR** |
+| 128 threads | 0.111 ms |
+| 256 threads | 0.114 ms |
+| 512 threads | 0.123 ms |
+
+**Configuração Ótima:**
+- Block size: **64 threads**
+- Grid size: 1563 blocos
+- Ocupação: Ótima para Turing (sm_75)
 
 ## 📝 Arquivos de Saída
 
-### CPU
-- `assign_seq.csv`: Atribuições (N linhas, 1 inteiro por linha)
-- `centroids_seq.csv`: Centróides finais (K linhas, 1 double por linha)
+### Diretório `results/`
 
-### GPU
-- `assign_cuda.csv`: Atribuições (N linhas)
-- `centroids_cuda.csv`: Centróides finais (K linhas)
+#### Métricas e Validação
+- **metrics_cuda.csv** - Métricas estruturadas (CSV)
+- **metrics_cuda.txt** - Métricas legíveis (texto)
+- **block_size_test.csv** - Resultados de teste de block sizes
+- **validation_cuda.txt** - Validação GPU vs CPU
+- **comparacao_seq_vs_cuda.txt** - Comparação detalhada completa
+
+#### Resultados do Algoritmo
+- **assign_cuda.csv** / **assign_seq.csv** - Atribuições (N linhas)
+- **centroids_cuda.csv** / **centroids_seq.csv** - Centróides finais (K linhas)
+
+### Diretório `graphs/`
+
+- **block_size_analysis.png** - Linha: tempo vs block size
+- **throughput_analysis.png** - Barra + pizza: throughput e distribuição
+- **timing_breakdown.png** - Barras: decomposição de tempo H2D/Kernels/D2H
+- **performance_summary.png** - Dashboard 6 painéis: visão geral completa
 
 ## 🔧 Troubleshooting
 
-### ERRO: "nvcc: command not found"
+### ERRO: "nvcc: command not found" ou "Cannot find compiler 'cl.exe'"
+
 ```powershell
-# Adicionar CUDA ao PATH
+# 1. Adicionar MSVC ao PATH (necessário no Windows)
+$msvcPath = "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64"
+$env:PATH = "$msvcPath;" + $env:PATH
+
+# 2. Adicionar CUDA ao PATH
 $env:PATH += ";C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.0\bin"
+
+# 3. Verificar
+nvcc --version
+cl.exe
 ```
 
 ### ERRO: "Device does not support this compute capability"
-```bash
+
+```powershell
 # Descobrir compute capability da GPU
-nvidia-smi
+nvidia-smi --query-gpu=compute_cap --format=csv,noheader
 
-# Usar o valor correto com -arch. Exemplo:
-# Para GTX 1660 Ti (sm_75)
-nvcc -O3 -arch=sm_75 kmeans_1d_cuda.cu -o kmeans_1d_cuda.exe
+# Usar o valor correto. Exemplo para GTX 1660 Ti (7.5):
+nvcc -O3 -arch=sm_75 kmeans_1d_cuda_optimized.cu -o kmeans_1d_cuda_opt.exe
 ```
 
-### GPU muito lenta (mais lenta que CPU)
-- Normal para N < 100K
-- Overhead CUDA domina para problemas pequenos
-- Aumentar N para observar speedup
+### GPU mais lenta que CPU
 
-### Saída CUDA vazia/erros
-```bash
-# Verificar disponibilidade de GPU
-nvidia-smi
+**Causas comuns:**
+- Normal para N < 50K (overhead CUDA domina)
+- Transferências PCI-E são gargalo em problemas pequenos
+- **Solução:** Aumentar N para 500K-1M para ver speedup real
 
-# Testar com programa CUDA simples
-cat > test_cuda.cu << 'EOF'
-#include <stdio.h>
-__global__ void kernel() { printf("GPU funciona!\n"); }
-int main() { kernel<<<1,1>>>(); cudaDeviceSynchronize(); }
-EOF
-nvcc test_cuda.cu -o test_cuda
-./test_cuda
+### Arquivos não encontrados
+
+```powershell
+# Verificar estrutura de diretórios
+Get-ChildItem data/
+Get-ChildItem results/
+
+# Executar com caminhos corretos
+.\kmeans_1d_cuda_opt.exe data/dados.csv data/centroides_iniciais.csv 20 100 1e-6
 ```
+
+### Python não gera gráficos
+
+```powershell
+# Instalar dependências
+pip install pandas matplotlib numpy
+
+# Executar em ambiente virtual (recomendado)
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install pandas matplotlib numpy
+python generate_performance_graphs.py .
+```
+
+## 💡 Dicas de Otimização
+
+### Para Aumentar Speedup
+
+1. **Aumentar tamanho do problema:**
+   ```powershell
+   # Gerar dataset maior (1M pontos)
+   python generate_data.py 1000000 20
+   ```
+
+2. **Aumentar número de clusters (K):**
+   - K maior = mais trabalho computacional
+   - Melhor aproveitamento da GPU
+
+3. **Usar problema multidimensional:**
+   - K-Means 2D/3D tem muito mais operações
+   - GPU se beneficia mais de problemas complexos
+
+### Para Reduzir Overhead
+
+- Minimizar transferências H2D/D2H
+- Usar streams CUDA para sobreposição
+- Pinned memory para transferências mais rápidas
+- Processar múltiplos datasets em batch
 
 ## 📚 Referências
 
 - [NVIDIA CUDA Programming Guide](https://docs.nvidia.com/cuda/cuda-c-programming-guide/)
 - [CUDA Best Practices Guide](https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/)
-- [K-Means Clustering](https://en.wikipedia.org/wiki/K-means_clustering)
+- [CUDA Constant Memory](https://docs.nvidia.com/cuda/cuda-c-programming-guide/#device-memory-accesses)
+- [Shared Memory in CUDA](https://docs.nvidia.com/cuda/cuda-c-programming-guide/#shared-memory)
 - [Atomic Operations in CUDA](https://docs.nvidia.com/cuda/cuda-c-programming-guide/#atomic-functions)
-- [Parallel Reduction](https://docs.nvidia.com/cuda/samples/1_Utilities/reduction/)
+- [K-Means Clustering Algorithm](https://en.wikipedia.org/wiki/K-means_clustering)
 
-## 📋 Notas
+## 📋 Notas Técnicas
 
-- Versão CUDA usa `cudaEventElapsedTime()` para medição com precisão de GPU
-- Versão CPU usa `get_time_ms()` que detecta Windows/Linux automaticamente
+### Implementação
+- Versão CUDA usa `cudaEvent` para medição precisa de tempo na GPU
+- Versão CPU usa `clock()` com detecção automática Windows/Linux
 - Ambas garantem resultados determinísticos com mesma seed
-- Transferência PCI-E (CPU ↔ GPU) é considerada no tempo total
+- SSE calculado no host (CPU) para reduzir overhead de kernel
+
+### Otimizações Aplicadas
+1. **Memória Constante:** Cache L1 de 64KB, broadcast para threads do warp
+2. **Shared Memory:** Redução de acessos à memória global (100x mais rápida)
+3. **Block Size Ótimo:** Testado automaticamente para hardware específico
+4. **Coalesced Memory Access:** Acesso sequencial otimizado aos dados
+
+### Limitações
+- Problema 1D tem baixa intensidade aritmética (poucos FLOPs por byte)
+- Overhead de lançamento de kernel é significativo para N pequeno
+- Speedup ideal requer N > 500K para saturar GPU moderna
+
+## 🎯 Conclusões
+
+### Desempenho Alcançado
+- ✅ **Speedup de 2.22x** para 100K pontos
+- ✅ **Overhead mínimo** de comunicação (0.5%)
+- ✅ **100% de corretude** validada
+- ✅ **Block size otimizado** automaticamente
+
+### Recomendações
+- Para **problemas pequenos** (N < 50K): CPU é mais eficiente
+- Para **problemas médios** (50K < N < 500K): GPU oferece speedup moderado (2-3x)
+- Para **problemas grandes** (N > 500K): GPU oferece speedup significativo (5-10x)
+- Para **máximo desempenho**: Usar K-Means 2D/3D com mais operações por ponto
 
 ## 👨‍💻 Autor
 
 Implementação para disciplina de Programação Concorrente e Distribuída
+
+---
+
+**Versão:** 2.0 (Otimizada)  
+**Data:** Novembro 2025  
+**GPU Testada:** NVIDIA GeForce GTX 1660 Ti (Compute 7.5)

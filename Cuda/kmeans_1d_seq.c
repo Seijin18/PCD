@@ -244,9 +244,9 @@ int main(int argc, char *argv[]) {
     printf("Tempo total: %.3f ms\n", elapsed_ms);
 
     // Salvar resultados
-    save_assignments("assign_seq.csv", model.assignments, dataset.N);
-    save_centroids("centroids_seq.csv", model.centroids, K);
-    printf("\nResultados salvos em: assign_seq.csv e centroids_seq.csv\n");
+    save_assignments("results/assign_seq.csv", model.assignments, dataset.N);
+    save_centroids("results/centroids_seq.csv", model.centroids, K);
+    printf("\nResultados salvos em: results/assign_seq.csv e results/centroids_seq.csv\n");
 
     // Limpar memória
     free(dataset.data);

@@ -1,0 +1,7 @@
+=== RELATÓRIO DE VALIDAÇÃO CUDA vs SEQUENCIAL ===
+
+Atribuições: 100.00% de match (0 diferenças em 100000 pontos)
+Centróides: diferença máxima = 3.9639402871e-11
+
+Status: PASSOU
+Descrição: Resultados coerentes com versão serial

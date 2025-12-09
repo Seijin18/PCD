@@ -1,0 +1,21 @@
+=== K-Means 1D - Versão Serial (Baseline) ===
+Lendo dados...
+Total de pontos (N): 10000
+Número de clusters (K): 4
+Max iterações: 50
+Epsilon: 1.000000e-04
+
+Iteração 1: SSE = 262718.3822749024 (var_rel = -nan(ind))
+Iteração 2: SSE = 242161.2164377932 (var_rel = 7.8247915731e-02)
+Iteração 3: SSE = 241958.1689051017 (var_rel = 8.3848080910e-04)
+Iteração 4: SSE = 241957.5432408864 (var_rel = 2.5858362959e-06)
+Convergiu!
+
+=== RESULTADOS ===
+Iterações executadas: 4
+SSE final: 241958.1689051017
+Tempo total: 0.000 ms
+
+=== SAÍDA PADRÃO ===
+N=10000 K=4 max_iter=50 eps=0.0001
+Iterações: 4 | SSE final: 241958.168905 | Tempo: 0.0 ms

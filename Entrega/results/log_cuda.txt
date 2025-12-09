@@ -1,0 +1,55 @@
+=== K-Means 1D - Versão CUDA (GPU) ===
+Parâmetros: K=4, max_iter=50, eps=1.000000e-04
+
+GPU: NVIDIA GeForce GTX 1660 Ti
+Capacidade de Compute: 7.5
+Max threads por bloco: 1024
+
+Lendo dados...
+Total de pontos (N): 10000
+K (clusters): 4
+Max iterações: 50
+Epsilon: 1.000000e-04
+
+Dados copiados para GPU em: 0.038 ms
+
+=== TESTE DE BLOCK SIZES ===
+Testando diferentes configurações de blocos...
+
+  Block size  32: 0.028 ms/iteração <- MELHOR
+  Block size  64: 0.016 ms/iteração <- MELHOR
+  Block size 128: 0.017 ms/iteração
+  Block size 256: 0.012 ms/iteração <- MELHOR
+  Block size 512: 0.015 ms/iteração
+
+Melhor block size: 256 (0.012 ms)
+
+=== EXECUTANDO K-MEANS ===
+Block size: 256, Grid size: 40
+
+Iteração 1: SSE = 262718.3822749024 (var_rel = 1.0000000000e+00)
+Iteração 2: SSE = 242161.2164377924 (var_rel = 7.8247915731e-02)
+Iteração 3: SSE = 241958.1689051011 (var_rel = 8.3848080910e-04)
+Iteração 4: SSE = 241957.5432408862 (var_rel = 2.5858362947e-06)
+Convergiu!
+
+=== RESULTADOS ===
+Iterações executadas: 4
+SSE final: 241958.1689051011
+
+--- Timing Detalhado ---
+Transfer H2D: 0.038 ms
+Kernels:     0.643 ms
+Transfer D2H: 0.029 ms
+TOTAL:       0.710 ms
+
+--- Métricas ---
+Throughput: 62.19 M pontos/segundo
+Tempo/iteração: 0.161 ms
+
+Resultados salvos em results/
+
+=== SAÍDA PADRÃO ===
+N=10000 K=4 max_iter=50 eps=0.0001 block_size=256
+Iterações: 4 | SSE final: 241958.168905 | Tempo: 0.7 ms
+H2D: 0.04 ms | Kernel: 0.64 ms | D2H: 0.03 ms

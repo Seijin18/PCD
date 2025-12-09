@@ -27,6 +27,7 @@ NVCC = nvcc
 CFLAGS = -O2 -std=c99 -Wall -Wextra -lm
 OPENMP_FLAGS = -O2 -std=c99 -fopenmp -Wall -Wextra -lm
 CUDA_FLAGS = -O3
+MPICC = mpicc
 
 # Diretórios
 BINDIR = bin
@@ -37,6 +38,7 @@ RESULTSDIR = results
 SERIAL = $(BINDIR)/kmeans_serial$(EXE_EXT)
 OMP = $(BINDIR)/kmeans_omp$(EXE_EXT)
 CUDA = $(BINDIR)/kmeans_cuda$(EXE_EXT)
+MPI = $(BINDIR)/kmeans_mpi$(EXE_EXT)
 GEN_DATA = $(BINDIR)/gen_data$(EXE_EXT)
 
 # Padrões de teste conforme enunciado
@@ -110,6 +112,10 @@ $(OMP): OpenMP/kmeans_1d_omp.c | $(BINDIR)
 $(CUDA): Cuda/kmeans_1d_cuda.cu | $(BINDIR)
 	$(NVCC) $(CUDA_FLAGS) -arch=$(CUDA_ARCH) -o $@ $<
 	@echo [OK] CUDA compilado
+
+$(MPI): kmeans_1d_mpi.c | $(BINDIR)
+	$(MPICC) -O2 -std=c99 -o $@ $< -lm
+	@echo [OK] MPI compilado
 
 $(GEN_DATA): Tools/generate_data.c | $(BINDIR)
 	$(CC) $(CFLAGS) -o $@ $<

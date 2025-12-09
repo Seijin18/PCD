@@ -9,6 +9,7 @@ Defaults use `Entrega/bin` executables and `Entrega/Data/dados_small.csv`.
 import subprocess
 import csv
 import sys
+import argparse
 from pathlib import Path
 import time
 import math
@@ -23,6 +24,7 @@ IMPLEMENTATIONS = [
     ("serial", BIN / "kmeans_serial.exe"),
     ("openmp", BIN / "kmeans_omp.exe"),
     ("cuda", BIN / "kmeans_cuda.exe"),
+    ("mpi", BIN / "kmeans_mpi.exe"),
 ]
 
 DEFAULT_DATA = DATA / "dados_small.csv"
@@ -66,6 +68,9 @@ def compute_sse(data, centroids, assigns):
     return sse
 
 
+MPI_PROCS = 2
+
+
 def run_impl(name, exe, data_file, init_file, k, max_iter, eps):
     # support multiple naming conventions (openmp -> omp)
     prefixes = [name]
@@ -77,16 +82,32 @@ def run_impl(name, exe, data_file, init_file, k, max_iter, eps):
     out_assign = RESULTS / f"assign_{prefixes[0]}.csv"
     out_centroids = RESULTS / f"centroids_{prefixes[0]}.csv"
     log = RESULTS / f"log_{name}.txt"
-    cmd = [
-        str(exe),
-        str(data_file),
-        str(init_file),
-        str(k),
-        str(max_iter),
-        str(eps),
-        str(out_assign),
-        str(out_centroids),
-    ]
+    # For MPI we run through mpiexec using `MPI_PROCS`.
+    if name == "mpi":
+        cmd = [
+            "mpiexec",
+            "-n",
+            str(MPI_PROCS),
+            str(exe),
+            str(data_file),
+            str(init_file),
+            str(k),
+            str(max_iter),
+            str(eps),
+            str(out_assign),
+            str(out_centroids),
+        ]
+    else:
+        cmd = [
+            str(exe),
+            str(data_file),
+            str(init_file),
+            str(k),
+            str(max_iter),
+            str(eps),
+            str(out_assign),
+            str(out_centroids),
+        ]
     print("Running", name, "->", " ".join(cmd))
     t0 = time.time()
     try:
@@ -249,6 +270,13 @@ def main():
     k = 4
     max_iter = 50
     eps = 1e-4
+
+    parser = argparse.ArgumentParser(description="Validate kmeans implementations")
+    parser.add_argument("--mpi-procs", type=int, default=2, help="number of MPI processes to use when running the MPI binary")
+    args = parser.parse_args()
+
+    global MPI_PROCS
+    MPI_PROCS = args.mpi_procs
 
     results = []
     for name, exe in IMPLEMENTATIONS:

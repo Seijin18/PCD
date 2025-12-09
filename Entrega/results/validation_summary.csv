@@ -1,0 +1,5 @@
+impl,status,info
+serial,OK,241957.54324088746
+openmp,OK,"{'sse': 241957.54324088746, 'sse_rel': 0.0, 'same_assigns': True}"
+cuda,OK,"{'sse': 241957.54324088746, 'sse_rel': 0.0, 'same_assigns': True}"
+mpi,OK,"{'sse': 241957.54324088746, 'sse_rel': 0.0, 'same_assigns': True}"

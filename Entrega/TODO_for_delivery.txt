@@ -6,15 +6,18 @@ Status geral
 - Scripts de build e experimentos adicionados/ajustados: `Makefile`, `build.bat`, `experiments/run_large_experiments.ps1`.
 - Scripts de pós-processamento adicionados: `experiments/aggregate_results.py`, `experiments/plot_results.py`.
 - Resultados dos runs grandes estão em `results/` e gráficos em `results/graphs/`.
+- Implementação MPI adicionada: `Entrega/kmeans_1d_mpi.c` e alvo `mpi` no `Makefile` (compilação testada com MS-MPI no Windows).
 
 Pendências prioritárias
 1) Padronizar parâmetros entre implementações (recomendado)
    - Objetivo: usar os mesmos `max_iter` e `eps` para todas as versões ao comparar tempos.
    - Ação: decidir `MAX_ITER` e `EPS` (sugestão: `MAX_ITER=50`, `EPS=1e-4`) e atualizar `Makefile` / passar explicitamente nos scripts.
 
-2) Implementar/validar versão MPI (se exigido)
-   - Status: inexistente no diretório `Entrega/`.
-   - Ação: implementar `kmeans_1d_mpi.c` com Broadcast + Allreduce e adicionar alvo de build/execução no `Makefile`.
+2) Implementar/validar versão MPI
+   - Status: IMPLEMENTADO e TESTADO (Windows MS-MPI).
+   - Ação realizada: `Entrega/kmeans_1d_mpi.c` adicionado; `Makefile` atualizado com alvo `mpi`; compilado com MSVC+MS-MPI e testado em dataset pequeno (output salvo em `results/`).
+
+   - Nota: o `experiments/validate.py` existente valida `serial`, `openmp` e `cuda`; podemos estender esse script para incluir `mpi` nas comparações (opcional, recomendado).
 
 3) Padronizar CLI e gravação de saídas
    - Objetivo: todas as versões devem aceitar `dados.csv centroides_iniciais.csv K max_iter eps assign_out centroids_out`.
@@ -45,12 +48,17 @@ Arquivos recentes adicionados
  - `OpenMP/README.md` : instruções rápidas e resultados de teste
 
 Próximas ações (prioridade)
- A) Padronizar `MAX_ITER/EPS` e re-executar experimentos grandes com 3 repetições (para estatística)
- B) Implementar o harness de validação (compare SSE/assign)
- C) Implementar versão MPI (opcional, se exigido pelo enunciado)
- D) Preparar `README.md` final e empacotar `release.zip`
+ A) Padronizar `MAX_ITER/EPS` e re-executar experimentos grandes com 3 repetições (para estatística) — SUGERIDO: manter `MAX_ITER=50`, `EPS=1e-4` como padrão.
+ B) (Opcional) Estender `experiments/validate.py` para incluir `mpi` nas comparações e rodar validação completa entre `serial`, `openmp`, `cuda` e `mpi`.
+ C) Validar benchs em larga escala (re-run `experiments/run_large_experiments.ps1`) e agregar resultados (já existem scripts para agregação/plot).
+ D) Preparar `README.md` final e empacotar `release.zip` com código, gráficos e relatório.
 
 Quem executa
 - Eu posso: padronizar parâmetros e re-run (A), gerar CSVs com média/desvio; implementar validação (B); e ajudar na implementação MPI (C) se desejar.
+Quem executa
+- Eu (assistente) implementei e testei a versão MPI, atualizei o `Makefile` e compilei/executei um run de validação pequeno com sucesso.
+- Posso: padronizar parâmetros e re-run (A), estender/rodar o harness de validação incluindo `mpi` (B), e preparar `README.md` + empacotar `release.zip` (D).
+
+Escolha o próximo passo: responda A, B, C, D ou uma combinação.
 
 Escolha o próximo passo: (responda A, B, C, D ou peça uma combinação)

@@ -193,15 +193,32 @@ void save_centroids(const char *filename, double *centroids, int K) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 3) {
+    if (argc < 4) {
         printf("Uso: %s dados.csv centroides.csv K [max_iter] [eps] [assign_out] [centroids_out]\n", argv[0]);
+        printf("Ex: %s Data/dados.csv Data/centroides.csv 4 50 1e-4 results/assign.csv results/centroids.csv\n", argv[0]);
         return 1;
     }
 
     const char *data_file = argv[1];
     const char *centroids_file = argv[2];
-    int K = (argc >= 4) ? atoi(argv[3]) : 3;
-    int num_threads = (argc >= 5) ? atoi(argv[4]) : omp_get_max_threads();
+    int K = atoi(argv[3]);
+    int max_iter = (argc >= 5) ? atoi(argv[4]) : 50;
+    double eps = (argc >= 6) ? atof(argv[5]) : 1e-4;
+    const char *assign_out = (argc >= 7) ? argv[6] : NULL;
+    const char *centroids_out = (argc >= 8) ? argv[7] : NULL;
+
+    // Determine number of threads from environment or fallback
+    int num_threads = omp_get_max_threads();
+    char *env_threads = NULL;
+#ifdef _WIN32
+    env_threads = getenv("OMP_NUM_THREADS");
+#else
+    env_threads = getenv("OMP_NUM_THREADS");
+#endif
+    if (env_threads != NULL) {
+        int t = atoi(env_threads);
+        if (t > 0) num_threads = t;
+    }
 
     // Configurar número de threads
     omp_set_num_threads(num_threads);
@@ -221,8 +238,8 @@ int main(int argc, char *argv[]) {
     model.assignments = (int *)malloc(dataset.N * sizeof(int));
 
     printf("K = %d clusters\n", K);
-    printf("Max iterações: %d\n", MAX_ITER);
-    printf("Epsilon: %e\n\n", EPSILON);
+    printf("Max iterações: %d\n", max_iter);
+    printf("Epsilon: %e\n\n", eps);
 
     // Medir tempo
     double start = omp_get_wtime();
@@ -231,7 +248,7 @@ int main(int argc, char *argv[]) {
     double prev_sse = INFINITY;
     int iter;
     
-    for (iter = 0; iter < MAX_ITER; iter++) {
+    for (iter = 0; iter < max_iter; iter++) {
         // Assignment (paralelo)
         double sse = assignment_step_parallel(dataset, &model);
         
@@ -242,7 +259,7 @@ int main(int argc, char *argv[]) {
         printf("Iteração %d: SSE = %.10f (variação relativa = %.10e)\n", 
                iter + 1, sse, rel_change);
         
-        if (rel_change < EPSILON) {
+        if (rel_change < eps) {
             printf("Convergiu!\n");
             iter++;
             break;
@@ -262,14 +279,21 @@ int main(int argc, char *argv[]) {
     printf("SSE final: %.10f\n", prev_sse);
     printf("Tempo total: %.3f ms\n", elapsed_ms);
 
-    // Salvar resultados
-    char assign_file[256], centroids_output[256];
-    sprintf(assign_file, "assign_omp_%d.csv", num_threads);
-    sprintf(centroids_output, "centroids_omp_%d.csv", num_threads);
-    
-    save_assignments(assign_file, model.assignments, dataset.N);
-    save_centroids(centroids_output, model.centroids, K);
-    printf("\nResultados salvos em: %s e %s\n", assign_file, centroids_output);
+    // Salvar resultados: se paths foram passados via CLI, respeitar; caso contrário, gerar nomes padrão
+    char default_assign[256];
+    char default_centroids[256];
+    if (assign_out == NULL) {
+        sprintf(default_assign, "results/assign_omp_%d.csv", num_threads);
+        assign_out = default_assign;
+    }
+    if (centroids_out == NULL) {
+        sprintf(default_centroids, "results/centroids_omp_%d.csv", num_threads);
+        centroids_out = default_centroids;
+    }
+
+    save_assignments(assign_out, model.assignments, dataset.N);
+    save_centroids(centroids_out, model.centroids, K);
+    printf("\nResultados salvos em: %s e %s\n", assign_out, centroids_out);
     printf("\n=== SAÍDA PADRÃO ===\n");
     printf("N=%d K=%d max_iter=%d eps=%g threads=%d\n", dataset.N, K, MAX_ITER, EPSILON, num_threads);
     printf("Iterações: %d | SSE final: %.6f | Tempo: %.1f ms\n", iter, prev_sse, elapsed_ms);

@@ -1,0 +1,56 @@
+TODO — Preparação final para entrega (PCD K-means 1D)
+Data: 2025-12-09
+
+Status geral
+- Projeto inspecionado; ferramentas e fontes principais estão em `Tools/`, `OpenMP/`, `Cuda/` e `Data/`.
+- Scripts de build e experimentos adicionados/ajustados: `Makefile`, `build.bat`, `experiments/run_large_experiments.ps1`.
+- Scripts de pós-processamento adicionados: `experiments/aggregate_results.py`, `experiments/plot_results.py`.
+- Resultados dos runs grandes estão em `results/` e gráficos em `results/graphs/`.
+
+Pendências prioritárias
+1) Padronizar parâmetros entre implementações (recomendado)
+   - Objetivo: usar os mesmos `max_iter` e `eps` para todas as versões ao comparar tempos.
+   - Ação: decidir `MAX_ITER` e `EPS` (sugestão: `MAX_ITER=50`, `EPS=1e-4`) e atualizar `Makefile` / passar explicitamente nos scripts.
+
+2) Implementar/validar versão MPI (se exigido)
+   - Status: inexistente no diretório `Entrega/`.
+   - Ação: implementar `kmeans_1d_mpi.c` com Broadcast + Allreduce e adicionar alvo de build/execução no `Makefile`.
+
+3) Padronizar CLI e gravação de saídas
+   - Objetivo: todas as versões devem aceitar `dados.csv centroides_iniciais.csv K max_iter eps assign_out centroids_out`.
+   - Ação: revisar `kmeans_1d_*` e ajustar/parâmetros se necessário; garantir mensagens no stdout com iterações/SSE/tempo.
+
+4) Testes de corretude (harness)
+   - Criar `experiments/validate_results.py` que compare SSE por iteração e `assign.csv` entre versões com tolerância.
+
+5) Repetições automáticas e estatísticas
+   - Executar cada configuração (serial/OpenMP/CUDA) com 3–5 repetições, agregar médias e desvios (modificar `run_large_experiments.ps1`).
+
+6) relatório curto e organização das pastas
+   - Criar `README.md` no root com passos de compilação/execução e gerar um `release.zip` contendo código, resultados e gráficos.
+
+Comandos úteis (PowerShell)
+ - Ativar venv (para scripts Python):
+   & "D:/Projetinhos/Faculdade/PCD/Entrega 1/.venv/Scripts/Activate.ps1"
+ - Rodar experimentos grandes (gera logs em `results/`):
+   .\experiments\run_large_experiments.ps1
+ - Agregar resultados e gerar gráficos:
+   python .\experiments\aggregate_results.py
+   python .\experiments\plot_results.py
+
+Arquivos recentes adicionados
+ - `experiments/run_large_experiments.ps1` : script PowerShell para runs com dataset large
+ - `experiments/aggregate_results.py` : parseia `results/*_large_run*.txt` e cria `results/aggregated_large_results.csv`
+ - `experiments/plot_results.py` : gera `results/graphs/time_by_mode.png` e `results/graphs/speedup_vs_serial.png`
+ - `OpenMP/README.md` : instruções rápidas e resultados de teste
+
+Próximas ações (prioridade)
+ A) Padronizar `MAX_ITER/EPS` e re-executar experimentos grandes com 3 repetições (para estatística)
+ B) Implementar o harness de validação (compare SSE/assign)
+ C) Implementar versão MPI (opcional, se exigido pelo enunciado)
+ D) Preparar `README.md` final e empacotar `release.zip`
+
+Quem executa
+- Eu posso: padronizar parâmetros e re-run (A), gerar CSVs com média/desvio; implementar validação (B); e ajudar na implementação MPI (C) se desejar.
+
+Escolha o próximo passo: (responda A, B, C, D ou peça uma combinação)

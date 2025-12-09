@@ -1,0 +1,137 @@
+REQUISITOS DO PROJETO PCD: K-MEANS 1D COM PARALELIZAÇÃO PROGRESSIVA
+
+OBJETIVO GERAL
+Implementar o algoritmo K-means em 1 dimensão (pontos X[i] e centróides C[c]), medir SSE e desempenho, e paralelizar o núcleo do algoritmo em três etapas independentes:
+  1. OpenMP (CPU memória compartilhada)
+  2. CUDA (GPU)
+  3. MPI (memória distribuída)
+
+ENTRADAS E SAÍDAS
+
+Entradas (CSV, 1 coluna, sem cabeçalho):
+  - dados.csv com N valores (pontos)
+  - centroides_iniciais.csv com K valores
+
+Saídas no terminal:
+  - Número de iterações
+  - SSE (Sum of Squared Errors) final
+  - Tempo total (ms)
+
+Saídas em arquivos:
+  - assign.csv (N linhas com índice do cluster por ponto)
+  - centroids.csv (K linhas com centróides finais)
+
+ALGORITMO BASE (NAIVE)
+
+Iterar até max_iter ou até variar pouco o SSE (eps):
+  1. Assignment: para cada ponto, escolher o centróide mais próximo (minimiza erro); acumular SSE
+  2. Update: para cada cluster, calcular a média dos pontos atribuídos. Se um cluster ficar vazio, copiar X[0] (estratégia simples)
+
+ETAPA 0 - VERSÃO SEQUENCIAL (BASELINE)
+  ✓ Executar a versão sequencial (fornecida no enunciado)
+  ✓ Coletar: SSE por iteração, tempo total, iterações
+  ✓ Salvar esses números: serão a linha de base para speedup
+
+ETAPA 1 - OPENMP (CPU)
+
+Meta: Paralelizar as funções de assignment e update na CPU
+
+O que paralelizar:
+  - Assignment: laço for (i=0; i<N; ++i)
+  - Update:
+    * Opção A (mais simples): usar acumuladores por thread (sum_thread[c], cnt_thread[c]) e reduzir após a região paralela
+    * Opção B: usar #pragma omp critical e verificar impactos no desempenho
+
+Medições:
+  - Escalonamento em threads: T ∈ {1, 2, 4, 8, 16, ...}
+  - Speedup = tempo_serial / tempo_OpenMP
+  - Afinar: schedule (static vs dynamic) e chunk size
+  - Validação: SSE não deve aumentar ao longo das iterações (pode ficar igual se convergiu)
+
+Compilação:
+  gcc -O2 -fopenmp -std=c99 kmeans_1d_omp.c -o kmeans_1d_omp -lm
+
+ETAPA 2 - CUDA (GPU)
+
+Meta: Mover o assignment para a GPU; o update pode ser feito na GPU (com atomics) ou no host (copiando assign)
+
+Desenho mínimo:
+  - Kernel de assignment: 1 thread por ponto i
+  - Cada thread varre K centróides, calcula d = (X[i]-C[c])^2, guarda o melhor e escreve assign[i]
+  - (Opcional) carregar C em memória constante
+  - SSE: reduzir no host somando os erros por ponto (ou fazer redução em blocos)
+  - Update:
+    * Opção A (mais simples): copiar assign para CPU e calcular médias no host
+    * Opção B: usar atomics em sum[c] e cnt[c] na GPU e depois dividir
+
+Medições:
+  - Tamanho de bloco (p.ex., 128, 256, 512) × grid
+  - Tempos: H2D/D2H, kernel, total
+  - Throughput: pontos/s
+  - Speedup vs. serial e vs. OpenMP
+
+Compilação:
+  nvcc -O2 kmeans_1d_cuda.cu -o kmeans_1d_cuda
+
+ETAPA 3 - MPI (MEMÓRIA DISTRIBUÍDA)
+
+Meta: Distribuir os N pontos entre P processos; centróides são globais a cada iteração
+
+Passos por iteração:
+  1. Broadcast (ou inicialização compartilhada): todos os processos têm C
+  2. Assignment local: cada processo calcula assign_local e SSE_local para seu bloco de pontos
+  3. Redução global:
+     - Somar SSE_local → SSE_global com MPI_Reduce
+     - Somar sum_local[c] e cnt_local[c] para todos os clusters com MPI_Allreduce
+     - Cada processo atualiza C com os resultados globais
+  4. Próxima iteração até convergir
+
+Medições:
+  - Strong scaling: P ∈ {1, 2, 4, 8, ...}
+  - Tempo de comunicação: destacar o custo de Allreduce
+  - Speedup vs. serial e OpenMP
+
+Compilação/Execução:
+  mpicc -O2 -std=c99 kmeans_1d_mpi.c -o kmeans_1d_mpi -lm
+  mpirun -np 4 ./kmeans_1d_mpi dados.csv centroides_iniciais.csv [args...]
+
+CONJUNTOS DE TESTE SUGERIDOS (1D)
+
+  - Pequeno: N=10^4, K=4
+  - Médio: N=10^5, K=8
+  - Grande: N=10^6, K=16 (se houver memória)
+  
+Gerar dados com mistura de faixas (ex.: perto de 0, 10, 20, 30) para facilitar a verificação visual
+
+O QUE ENTREGAR
+
+1. Código no GitHub:
+   - serial/ (com README.md)
+   - openmp/ (com README.md)
+   - cuda/ (com README.md)
+   - mpi/ (com README.md)
+   
+Cada pasta deve conter instruções de como compilar/rodar
+
+2. Relatório curto (4-6 páginas por etapa):
+   - Ambiente (CPU/GPU/RAM/rede; versões de compilador)
+   - Gráficos: tempo, speedup, pontos/s por etapa
+   - Para MPI: curva de speedup e comentário sobre custo de Allreduce
+   - Para CUDA: impacto de block size e custo de transferência
+   - Para OpenMP: efeito de nº de threads e de schedule
+   - Seções de validação (SSE por iteração, convergência, igualdade de resultados entre versões dentro de tolerância)
+   - Análise de resultados e conclusões
+   - Referências bibliográficas: apresentar pequena revisão bibliográfica e comparar resultados com literatura
+
+CRITÉRIOS DE AVALIAÇÃO
+
+  - Desempenho e análise (speedup, tempos de execução, eficiência e gargalos por arquitetura): 30%
+  - Corretude e reprodutibilidade (SSE consistente, convergência, demonstração da corretude da execução): 30%
+  - Relatório (clareza, gráficos, referências bibliográficas, análises e conclusões): 20%
+  - Qualidade do código e organização: 10%
+  - Extra (implementação e/ou análises não sugeridas no enunciado que melhorem a qualidade científica do trabalho): 10%
+
+DICAS RÁPIDAS
+
+  - Padronize parâmetros (N, K, max_iter, eps) entre as versões para comparar
+  - Fixe uma semente ao gerar dados (quando aplicável) para repetibilidade

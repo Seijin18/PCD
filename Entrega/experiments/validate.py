@@ -273,10 +273,24 @@ def main():
 
     parser = argparse.ArgumentParser(description="Validate kmeans implementations")
     parser.add_argument("--mpi-procs", type=int, default=2, help="number of MPI processes to use when running the MPI binary")
+    parser.add_argument(
+        "--data", type=str, default=None, help="path to data file (overrides default)"
+    )
+    parser.add_argument(
+        "--init",
+        type=str,
+        default=None,
+        help="path to initial centroids file (overrides default)",
+    )
     args = parser.parse_args()
 
     global MPI_PROCS
     MPI_PROCS = args.mpi_procs
+
+    if args.data:
+        data_file = Path(args.data)
+    if args.init:
+        init_file = Path(args.init)
 
     results = []
     for name, exe in IMPLEMENTATIONS:

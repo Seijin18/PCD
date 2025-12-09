@@ -1,0 +1,86 @@
+=== K-Means 1D - Versão CUDA (GPU) ===
+Parâmetros: K=16, max_iter=50, eps=1.000000e-04
+
+GPU: NVIDIA GeForce GTX 1660 Ti
+Capacidade de Compute: 7.5
+Max threads por bloco: 1024
+
+Lendo dados...
+Total de pontos (N): 1000000
+K (clusters): 16
+Max iterações: 50
+Epsilon: 1.000000e-04
+
+Dados copiados para GPU em: 2.379 ms
+
+=== TESTE DE BLOCK SIZES ===
+Testando diferentes configurações de blocos...
+
+  Block size  32: 0.860 ms/iteração <- MELHOR
+  Block size  64: 0.851 ms/iteração <- MELHOR
+  Block size 128: 0.888 ms/iteração
+  Block size 256: 0.859 ms/iteração
+  Block size 512: 0.880 ms/iteração
+
+Melhor block size: 64 (0.851 ms)
+
+Using provided block size: 128
+=== EXECUTANDO K-MEANS ===
+Block size: 128, Grid size: 7813
+
+Iteração 1: SSE = 8523086.2340791300 (var_rel = 1.0000000000e+00)
+Iteração 2: SSE = 4799694.2055017399 (var_rel = 4.3685959831e-01)
+Iteração 3: SSE = 4458035.1727321381 (var_rel = 7.1183500061e-02)
+Iteração 4: SSE = 4319174.4157712208 (var_rel = 3.1148421127e-02)
+Iteração 5: SSE = 4245162.5379503127 (var_rel = 1.7135653877e-02)
+Iteração 6: SSE = 4202531.9301214823 (var_rel = 1.0042161507e-02)
+Iteração 7: SSE = 4177349.0535389888 (var_rel = 5.9923105883e-03)
+Iteração 8: SSE = 4161226.9579411335 (var_rel = 3.8594082973e-03)
+Iteração 9: SSE = 4150832.1366631920 (var_rel = 2.4980183448e-03)
+Iteração 10: SSE = 4143503.6612780006 (var_rel = 1.7655436654e-03)
+Iteração 11: SSE = 4137889.5861892402 (var_rel = 1.3549101311e-03)
+Iteração 12: SSE = 4133449.9771779291 (var_rel = 1.0729162581e-03)
+Iteração 13: SSE = 4130072.6944784606 (var_rel = 8.1706146636e-04)
+Iteração 14: SSE = 4127254.0827957042 (var_rel = 6.8246055003e-04)
+Iteração 15: SSE = 4124861.3495325721 (var_rel = 5.7973975315e-04)
+Iteração 16: SSE = 4122760.1596321329 (var_rel = 5.0939649176e-04)
+Iteração 17: SSE = 4120905.2558243051 (var_rel = 4.4991795205e-04)
+Iteração 18: SSE = 4119296.5334326304 (var_rel = 3.9038082455e-04)
+Iteração 19: SSE = 4117827.8504359503 (var_rel = 3.5653733223e-04)
+Iteração 20: SSE = 4116510.3917400786 (var_rel = 3.1994020725e-04)
+Iteração 21: SSE = 4115308.3461244102 (var_rel = 2.9200597139e-04)
+Iteração 22: SSE = 4114237.7478932738 (var_rel = 2.6015018587e-04)
+Iteração 23: SSE = 4113305.1370400470 (var_rel = 2.2667889178e-04)
+Iteração 24: SSE = 4112467.2260812214 (var_rel = 2.0370746417e-04)
+Iteração 25: SSE = 4111689.2479309663 (var_rel = 1.8917552590e-04)
+Iteração 26: SSE = 4110968.8419129313 (var_rel = 1.7520925697e-04)
+Iteração 27: SSE = 4110323.9711303916 (var_rel = 1.5686588912e-04)
+Iteração 28: SSE = 4109714.1692913761 (var_rel = 1.4835858275e-04)
+Iteração 29: SSE = 4109138.4207756692 (var_rel = 1.4009453991e-04)
+Iteração 30: SSE = 4108582.8928571995 (var_rel = 1.3519328423e-04)
+Iteração 31: SSE = 4108052.5149900112 (var_rel = 1.2909021943e-04)
+Iteração 32: SSE = 4107533.7032021657 (var_rel = 1.2629142056e-04)
+Iteração 33: SSE = 4107086.1790911108 (var_rel = 1.0895202411e-04)
+Iteração 34: SSE = 4106684.2035045153 (var_rel = 9.7873667381e-05)
+Convergiu!
+
+=== RESULTADOS ===
+Iterações executadas: 34
+SSE final: 4107086.1790911108
+
+--- Timing Detalhado ---
+Transfer H2D: 2.379 ms
+Kernels:     173.768 ms
+Transfer D2H: 1.136 ms
+TOTAL:       177.283 ms
+
+--- Métricas ---
+Throughput: 195.66 M pontos/segundo
+Tempo/iteração: 5.111 ms
+
+Resultados salvos em results/
+
+=== SAÍDA PADRÃO ===
+N=1000000 K=16 max_iter=50 eps=0.0001 block_size=128
+Iterações: 34 | SSE final: 4107086.179091 | Tempo: 177.3 ms
+H2D: 2.38 ms | Kernel: 173.77 ms | D2H: 1.14 ms

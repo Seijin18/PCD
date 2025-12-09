@@ -29,6 +29,10 @@ OPENMP_FLAGS = -O2 -std=c99 -fopenmp -Wall -Wextra -lm
 CUDA_FLAGS = -O3
 MPICC = mpicc
 
+# On Windows, you can build MPI binary with MSVC + MS-MPI SDK using the
+# `make mpi-msvc` target. It calls `vcvarsall.bat` and links against `msmpi.lib`.
+# If you have an MPI wrapper (mpicc) available, `make mpi` will use it.
+
 # Diretórios
 BINDIR = bin
 DATADIR = Data
@@ -56,7 +60,7 @@ EPS = 1e-4
 # Threads para OpenMP
 OMP_THREADS = 1 2 4 8 16
 
-.PHONY: all clean clean-results help serial omp cuda generate test test-serial test-omp test-cuda benchmark
+.PHONY: all clean clean-results help serial omp cuda generate test test-serial test-omp test-cuda benchmark plot-large
 
 all: $(SERIAL) $(OMP) $(CUDA) $(GEN_DATA)
 	@echo ""
@@ -113,9 +117,16 @@ $(CUDA): Cuda/kmeans_1d_cuda.cu | $(BINDIR)
 	$(NVCC) $(CUDA_FLAGS) -arch=$(CUDA_ARCH) -o $@ $<
 	@echo [OK] CUDA compilado
 
-$(MPI): kmeans_1d_mpi.c | $(BINDIR)
+$(MPI): MPI/kmeans_1d_mpi.c | $(BINDIR)
 	$(MPICC) -O2 -std=c99 -o $@ $< -lm
 	@echo [OK] MPI compilado
+
+ifeq ($(OS),Windows_NT)
+mpi-msvc: MPI/kmeans_1d_mpi.c | $(BINDIR)
+	@echo Compilando MPI com MSVC (requer MS-MPI SDK e Visual Studio Developer Tools)...
+	@cmd /C "call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvarsall.bat\" x64 && cl /I \"C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Include\" MPI\\kmeans_1d_mpi.c /Fe:$(MPI) /link /LIBPATH:\"C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Lib\\x64\" msmpi.lib"
+	@echo [OK] MPI (MSVC) compilado
+endif
 
 $(GEN_DATA): Tools/generate_data.c | $(BINDIR)
 	$(CC) $(CFLAGS) -o $@ $<
@@ -187,27 +198,81 @@ test-cuda: $(CUDA) generate-small $(RESULTSDIR)
 
 # ===== TESTES COM DATASET GRANDE (LOG OUTPUT) =====
 
-test-large: $(SERIAL) $(OMP) $(CUDA) $(RESULTSDIR)
+test-large: $(SERIAL) $(OMP) $(CUDA) $(MPI) $(RESULTSDIR)
 	@echo ""
 	@echo ======================================
 	@echo TESTE: SERIAL (Large)
 	@echo ======================================
 	@echo ""
-	$(SERIAL) $(DATADIR)/dados_large.csv $(DATADIR)/centroides_large.csv $(LARGE_K) $(MAX_ITER) $(EPS) $(RESULTSDIR)/assign_serial_large.csv $(RESULTSDIR)/centroids_serial_large.csv > $(RESULTSDIR)/serial_large_run.txt 2>&1
+	@"$(abspath $(SERIAL))" $(DATADIR)/dados_large.csv $(DATADIR)/centroides_large.csv $(LARGE_K) $(MAX_ITER) $(EPS) $(RESULTSDIR)/assign_serial_large.csv $(RESULTSDIR)/centroids_serial_large.csv > $(RESULTSDIR)/serial_large_run.txt 2>&1 || true
+	@python experiments/save_run_csv.py --log $(RESULTSDIR)/serial_large_run.txt --csv $(RESULTSDIR)/run_summary.csv --mode serial
 	@echo ""
 	@echo ======================================
 	@echo TESTE: OPENMP (Large, var threads)
 	@echo ======================================
 	@echo ""
-	@for %%T in (1 2 4 8 16) do (echo Threads: %%T & set OMP_NUM_THREADS=%%T & $(OMP) $(DATADIR)/dados_large.csv $(DATADIR)/centroides_large.csv $(LARGE_K) $(MAX_ITER) $(EPS) $(RESULTSDIR)/assign_omp_%%T_large.csv $(RESULTSDIR)/centroids_omp_%%T_large.csv) > $(RESULTSDIR)/omp_large_runs.txt 2>&1
+	@echo Threads: 1
+	@set OMP_NUM_THREADS=1 && "$(abspath $(OMP))" $(DATADIR)/dados_large.csv $(DATADIR)/centroides_large.csv $(LARGE_K) $(MAX_ITER) $(EPS) $(RESULTSDIR)/assign_omp_1_large.csv $(RESULTSDIR)/centroids_omp_1_large.csv > $(RESULTSDIR)/omp_1_large_run.txt 2>&1
+	@python experiments/save_run_csv.py --log $(RESULTSDIR)/omp_1_large_run.txt --csv $(RESULTSDIR)/run_summary.csv --mode omp --threads 1
+	@echo Threads: 2
+	@set OMP_NUM_THREADS=2 && "$(abspath $(OMP))" $(DATADIR)/dados_large.csv $(DATADIR)/centroides_large.csv $(LARGE_K) $(MAX_ITER) $(EPS) $(RESULTSDIR)/assign_omp_2_large.csv $(RESULTSDIR)/centroids_omp_2_large.csv > $(RESULTSDIR)/omp_2_large_run.txt 2>&1
+	@python experiments/save_run_csv.py --log $(RESULTSDIR)/omp_2_large_run.txt --csv $(RESULTSDIR)/run_summary.csv --mode omp --threads 2
+	@echo Threads: 4
+	@set OMP_NUM_THREADS=4 && "$(abspath $(OMP))" $(DATADIR)/dados_large.csv $(DATADIR)/centroides_large.csv $(LARGE_K) $(MAX_ITER) $(EPS) $(RESULTSDIR)/assign_omp_4_large.csv $(RESULTSDIR)/centroids_omp_4_large.csv > $(RESULTSDIR)/omp_4_large_run.txt 2>&1
+	@python experiments/save_run_csv.py --log $(RESULTSDIR)/omp_4_large_run.txt --csv $(RESULTSDIR)/run_summary.csv --mode omp --threads 4
+	@echo Threads: 8
+	@set OMP_NUM_THREADS=8 && "$(abspath $(OMP))" $(DATADIR)/dados_large.csv $(DATADIR)/centroides_large.csv $(LARGE_K) $(MAX_ITER) $(EPS) $(RESULTSDIR)/assign_omp_8_large.csv $(RESULTSDIR)/centroids_omp_8_large.csv > $(RESULTSDIR)/omp_8_large_run.txt 2>&1
+	@python experiments/save_run_csv.py --log $(RESULTSDIR)/omp_8_large_run.txt --csv $(RESULTSDIR)/run_summary.csv --mode omp --threads 8
+	@echo Threads: 16
+	@set OMP_NUM_THREADS=16 && "$(abspath $(OMP))" $(DATADIR)/dados_large.csv $(DATADIR)/centroides_large.csv $(LARGE_K) $(MAX_ITER) $(EPS) $(RESULTSDIR)/assign_omp_16_large.csv $(RESULTSDIR)/centroids_omp_16_large.csv > $(RESULTSDIR)/omp_16_large_run.txt 2>&1
+	@python experiments/save_run_csv.py --log $(RESULTSDIR)/omp_16_large_run.txt --csv $(RESULTSDIR)/run_summary.csv --mode omp --threads 16
 	@echo ""
 	@echo ======================================
 	@echo TESTE: CUDA (Large)
 	@echo ======================================
 	@echo ""
-	$(CUDA) $(DATADIR)/dados_large.csv $(DATADIR)/centroides_large.csv $(LARGE_K) $(MAX_ITER) $(EPS) $(RESULTSDIR)/assign_cuda_large.csv $(RESULTSDIR)/centroids_cuda_large.csv > $(RESULTSDIR)/cuda_large_run.txt 2>&1
+	@echo Running CUDA with block sizes: 32 64 128 256 512
+	@set BS_LIST=32 64 128 256 512
+	@echo Block size: 32
+	@"$(abspath $(CUDA))" $(DATADIR)/dados_large.csv $(DATADIR)/centroides_large.csv $(LARGE_K) $(MAX_ITER) $(EPS) $(RESULTSDIR)/assign_cuda_bs32_large.csv $(RESULTSDIR)/centroids_cuda_bs32_large.csv 32 > $(RESULTSDIR)/cuda_bs_32_large_run.txt 2>&1 || true
+	@python experiments/save_run_csv.py --log $(RESULTSDIR)/cuda_bs_32_large_run.txt --csv $(RESULTSDIR)/run_summary.csv --mode cuda --label bs32
+	@echo Block size: 64
+	@"$(abspath $(CUDA))" $(DATADIR)/dados_large.csv $(DATADIR)/centroides_large.csv $(LARGE_K) $(MAX_ITER) $(EPS) $(RESULTSDIR)/assign_cuda_bs64_large.csv $(RESULTSDIR)/centroids_cuda_bs64_large.csv 64 > $(RESULTSDIR)/cuda_bs_64_large_run.txt 2>&1 || true
+	@python experiments/save_run_csv.py --log $(RESULTSDIR)/cuda_bs_64_large_run.txt --csv $(RESULTSDIR)/run_summary.csv --mode cuda --label bs64
+	@echo Block size: 128
+	@"$(abspath $(CUDA))" $(DATADIR)/dados_large.csv $(DATADIR)/centroides_large.csv $(LARGE_K) $(MAX_ITER) $(EPS) $(RESULTSDIR)/assign_cuda_bs128_large.csv $(RESULTSDIR)/centroids_cuda_bs128_large.csv 128 > $(RESULTSDIR)/cuda_bs_128_large_run.txt 2>&1 || true
+	@python experiments/save_run_csv.py --log $(RESULTSDIR)/cuda_bs_128_large_run.txt --csv $(RESULTSDIR)/run_summary.csv --mode cuda --label bs128
+	@echo Block size: 256
+	@"$(abspath $(CUDA))" $(DATADIR)/dados_large.csv $(DATADIR)/centroides_large.csv $(LARGE_K) $(MAX_ITER) $(EPS) $(RESULTSDIR)/assign_cuda_bs256_large.csv $(RESULTSDIR)/centroids_cuda_bs256_large.csv 256 > $(RESULTSDIR)/cuda_bs_256_large_run.txt 2>&1 || true
+	@python experiments/save_run_csv.py --log $(RESULTSDIR)/cuda_bs_256_large_run.txt --csv $(RESULTSDIR)/run_summary.csv --mode cuda --label bs256
+	@echo Block size: 512
+	@"$(abspath $(CUDA))" $(DATADIR)/dados_large.csv $(DATADIR)/centroides_large.csv $(LARGE_K) $(MAX_ITER) $(EPS) $(RESULTSDIR)/assign_cuda_bs512_large.csv $(RESULTSDIR)/centroids_cuda_bs512_large.csv 512 > $(RESULTSDIR)/cuda_bs_512_large_run.txt 2>&1 || true
+	@python experiments/save_run_csv.py --log $(RESULTSDIR)/cuda_bs_512_large_run.txt --csv $(RESULTSDIR)/run_summary.csv --mode cuda --label bs512
+	@echo ""
+	@echo ======================================
+	@echo TESTE: MPI (Large, 4 procs)
+	@echo ======================================
+	@echo ""
+	@echo Running MPI with process counts: 1 2 4 8
+	@echo P: 1
+	@mpiexec -n 1 "$(abspath $(MPI))" $(DATADIR)/dados_large.csv $(DATADIR)/centroides_large.csv $(LARGE_K) $(MAX_ITER) $(EPS) $(RESULTSDIR)/assign_mpi_p1_large.csv $(RESULTSDIR)/centroids_mpi_p1_large.csv > $(RESULTSDIR)/mpi_p1_large_run.txt 2>&1 || true
+	@python experiments/save_run_csv.py --log $(RESULTSDIR)/mpi_p1_large_run.txt --csv $(RESULTSDIR)/run_summary.csv --mode mpi --threads 1
+	@echo P: 2
+	@mpiexec -n 2 "$(abspath $(MPI))" $(DATADIR)/dados_large.csv $(DATADIR)/centroides_large.csv $(LARGE_K) $(MAX_ITER) $(EPS) $(RESULTSDIR)/assign_mpi_p2_large.csv $(RESULTSDIR)/centroids_mpi_p2_large.csv > $(RESULTSDIR)/mpi_p2_large_run.txt 2>&1 || true
+	@python experiments/save_run_csv.py --log $(RESULTSDIR)/mpi_p2_large_run.txt --csv $(RESULTSDIR)/run_summary.csv --mode mpi --threads 2
+	@echo P: 4
+	@mpiexec -n 4 "$(abspath $(MPI))" $(DATADIR)/dados_large.csv $(DATADIR)/centroides_large.csv $(LARGE_K) $(MAX_ITER) $(EPS) $(RESULTSDIR)/assign_mpi_p4_large.csv $(RESULTSDIR)/centroids_mpi_p4_large.csv > $(RESULTSDIR)/mpi_p4_large_run.txt 2>&1 || true
+	@python experiments/save_run_csv.py --log $(RESULTSDIR)/mpi_p4_large_run.txt --csv $(RESULTSDIR)/run_summary.csv --mode mpi --threads 4
+	@echo P: 8
+	@mpiexec -n 8 "$(abspath $(MPI))" $(DATADIR)/dados_large.csv $(DATADIR)/centroides_large.csv $(LARGE_K) $(MAX_ITER) $(EPS) $(RESULTSDIR)/assign_mpi_p8_large.csv $(RESULTSDIR)/centroids_mpi_p8_large.csv > $(RESULTSDIR)/mpi_p8_large_run.txt 2>&1 || true
+	@python experiments/save_run_csv.py --log $(RESULTSDIR)/mpi_p8_large_run.txt --csv $(RESULTSDIR)/run_summary.csv --mode mpi --threads 8
 	@echo ""
 	@echo "Large dataset tests complete. Logs in $(RESULTSDIR)/"
+
+plot-large: $(RESULTSDIR)
+	@echo "Generating plots from $(RESULTSDIR)/run_summary.csv ..."
+	@python experiments/plot_results.py
+	@echo "[OK] Plots generated in $(RESULTSDIR)/graphs"
 
 # ===== BENCHMARK SERIAL =====
 

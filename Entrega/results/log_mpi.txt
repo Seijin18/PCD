@@ -1,6 +1,0 @@
-Iteração 1: SSE = 262718.3822749040 (var_rel = -nan(ind))
-Iteração 2: SSE = 242161.2164377926 (var_rel = 7.8247915731e-02)
-Iteração 3: SSE = 241958.1689051015 (var_rel = 8.3848080910e-04)
-Iteração 4: SSE = 241957.5432408861 (var_rel = 2.5858362966e-06)
-Convergiu!
-Resultados salvos em: D:\Projetinhos\Faculdade\PCD\Entrega 1\Entrega\results\assign_mpi.csv e D:\Projetinhos\Faculdade\PCD\Entrega 1\Entrega\results\centroids_mpi.csv

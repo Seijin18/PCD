@@ -1,0 +1,16 @@
+file,mode,threads,label,iterations,sse_final,time_ms,h2d_ms,kernel_ms,d2h_ms,throughput_millions_per_s,mpi_total_ms,mpi_comm_total_ms,mpi_comm_avg_ms,block_size,plot_label
+serial_large_run.txt,serial,,Serial,50,4106684.2035045135,492.0,,,,,,,,,Serial
+omp_1_large_run.txt,omp,1.0,OpenMP-1t,50,4106684.2035045135,511.0,,,,,,,,,OpenMP-1t
+omp_2_large_run.txt,omp,2.0,OpenMP-2t,50,4106684.203504432,266.0,,,,,,,,,OpenMP-2t
+omp_4_large_run.txt,omp,4.0,OpenMP-4t,50,4106684.2035044464,230.0,,,,,,,,,OpenMP-4t
+omp_8_large_run.txt,omp,8.0,OpenMP-8t,50,4106684.203504436,167.0,,,,,,,,,OpenMP-8t
+omp_16_large_run.txt,omp,16.0,OpenMP-16t,50,4106684.2035044506,186.0,,,,,,,,,OpenMP-16t
+cuda_bs_32_large_run.txt,cuda,,CUDA-bs32,50,4106684.2035045223,199.383,0.984,195.997,2.402,173.47,,,,32.0,CUDA-bs32
+cuda_bs_64_large_run.txt,cuda,,CUDA-bs64,50,4106684.203504524,156.797,1.884,153.768,1.145,221.11,,,,64.0,CUDA-bs64
+cuda_bs_128_large_run.txt,cuda,,CUDA-bs128,50,4106684.2035045153,177.283,2.379,173.768,1.136,195.66,,,,128.0,CUDA-bs128
+cuda_bs_256_large_run.txt,cuda,,CUDA-bs256,50,4106684.2035045214,148.841,2.557,145.092,1.191,234.33,,,,256.0,CUDA-bs256
+cuda_bs_512_large_run.txt,cuda,,CUDA-bs512,50,4106684.2035045256,155.934,2.683,151.363,1.888,224.63,,,,512.0,CUDA-bs512
+mpi_p1_large_run.txt,mpi,1.0,MPI-1p,34,4106684.2035045135,2189.061,,,,,2189.061,0.354,0.354,,MPI-1p
+mpi_p2_large_run.txt,mpi,2.0,MPI-2p,34,4106684.2035044217,1190.202,,,,,1190.202,23.3,11.65,,MPI-2p
+mpi_p4_large_run.txt,mpi,4.0,MPI-4p,34,4106684.2035044534,784.649,,,,,784.649,253.705,63.426,,MPI-4p
+mpi_p8_large_run.txt,mpi,8.0,MPI-8p,34,4106684.2035044353,560.988,,,,,560.988,548.051,68.506,,MPI-8p

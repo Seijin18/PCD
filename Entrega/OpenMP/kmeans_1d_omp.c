@@ -1,6 +1,5 @@
 /*
  * K-Means 1D - Versão Paralela com OpenMP
- * Implementação com paralelização dos passos de Assignment e Update
  */
 
 #include <stdio.h>

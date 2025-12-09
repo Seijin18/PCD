@@ -2,15 +2,6 @@
  * ============================================================
  * K-Means 1D - Versão CUDA (GPU)
  * ============================================================
- * 
- * Implementação paralela em GPU com múltiplas otimizações
- * - Memória constante para centróides
- * - Redução eficiente por blocos
- * - Teste automático de block sizes
- * - Métricas de desempenho detalhadas
- * 
- * Compilar: nvcc -O2 -o kmeans_cuda kmeans_1d_cuda.cu
- * Usar: ./kmeans_cuda ../data/dados.csv ../data/centroides_iniciais.csv K [maxiter] [eps]
  */
 
 #include <stdio.h>
@@ -62,11 +53,6 @@ void ensure_results_dir() {
 __constant__ double constant_centroids[MAX_K];
 
 /* ===== KERNELS CUDA ===== */
-
-/*
- * Kernel Assignment: usa memória constante para centróides
- * Cada thread processa um ponto
- */
 __global__ void kernel_assignment_optimized(double *data, int N, int K,
                                              int *assignments, double *sse_array) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -90,10 +76,6 @@ __global__ void kernel_assignment_optimized(double *data, int N, int K,
     sse_array[i] = min_dist;
 }
 
-/*
- * Kernel Update Redução: calcula somas e contagens por bloco
- * Usa shared memory para redução eficiente
- */
 __global__ void kernel_update_reduction(int *assignments, double *data, int N, int K,
                                         double *block_sums, int *block_counts) {
     extern __shared__ char shared_memory[];
@@ -395,6 +377,20 @@ int main(int argc, char *argv[]) {
 
     /* ===== ALGORITMO K-MEANS ===== */
     int block_size = best_block_size;
+    // If a block size was provided via command-line, use it and skip auto test
+    int provided_block_size = 0;
+    if (argc >= 9) {
+        provided_block_size = atoi(argv[8]);
+        if (provided_block_size > 0) {
+            block_size = provided_block_size;
+            printf("Using provided block size: %d\n", block_size);
+        }
+    }
+    if (provided_block_size > 0) {
+        // overwrite best_time variable for reporting consistency
+        best_block_size = block_size;
+        best_time = 0.0f;
+    }
     int grid_size_N = (dataset.N + block_size - 1) / block_size;
     int num_blocks = grid_size_N;
 

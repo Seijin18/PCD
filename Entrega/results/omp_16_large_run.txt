@@ -1,0 +1,54 @@
+=== K-Means 1D - Versão Paralela (OpenMP) ===
+Threads: 16
+Lendo dados...
+Total de pontos: 1000000
+K = 16 clusters
+Max iterações: 50
+Epsilon: 1.000000e-04
+
+Iteração 1: SSE = 8523086.2340791747 (variação relativa = -nan(ind))
+Iteração 2: SSE = 4799694.2055016281 (variação relativa = 4.3685959831e-01)
+Iteração 3: SSE = 4458035.1727319350 (variação relativa = 7.1183500061e-02)
+Iteração 4: SSE = 4319174.4157712283 (variação relativa = 3.1148421127e-02)
+Iteração 5: SSE = 4245162.5379502587 (variação relativa = 1.7135653877e-02)
+Iteração 6: SSE = 4202531.9301215792 (variação relativa = 1.0042161507e-02)
+Iteração 7: SSE = 4177349.0535389124 (variação relativa = 5.9923105883e-03)
+Iteração 8: SSE = 4161226.9579412034 (variação relativa = 3.8594082972e-03)
+Iteração 9: SSE = 4150832.1366633424 (variação relativa = 2.4980183448e-03)
+Iteração 10: SSE = 4143503.6612779787 (variação relativa = 1.7655436655e-03)
+Iteração 11: SSE = 4137889.5861891378 (variação relativa = 1.3549101311e-03)
+Iteração 12: SSE = 4133449.9771779212 (variação relativa = 1.0729162581e-03)
+Iteração 13: SSE = 4130072.6944785640 (variação relativa = 8.1706146633e-04)
+Iteração 14: SSE = 4127254.0827955711 (variação relativa = 6.8246055009e-04)
+Iteração 15: SSE = 4124861.3495325330 (variação relativa = 5.7973975312e-04)
+Iteração 16: SSE = 4122760.1596321086 (variação relativa = 5.0939649175e-04)
+Iteração 17: SSE = 4120905.2558242735 (variação relativa = 4.4991795205e-04)
+Iteração 18: SSE = 4119296.5334329084 (variação relativa = 3.9038082448e-04)
+Iteração 19: SSE = 4117827.8504358097 (variação relativa = 3.5653733233e-04)
+Iteração 20: SSE = 4116510.3917402122 (variação relativa = 3.1994020718e-04)
+Iteração 21: SSE = 4115308.3461246369 (variação relativa = 2.9200597137e-04)
+Iteração 22: SSE = 4114237.7478931379 (variação relativa = 2.6015018595e-04)
+Iteração 23: SSE = 4113305.1370400507 (variação relativa = 2.2667889175e-04)
+Iteração 24: SSE = 4112467.2260813569 (variação relativa = 2.0370746414e-04)
+Iteração 25: SSE = 4111689.2479309542 (variação relativa = 1.8917552594e-04)
+Iteração 26: SSE = 4110968.8419129029 (variação relativa = 1.7520925698e-04)
+Iteração 27: SSE = 4110323.9711301704 (variação relativa = 1.5686588917e-04)
+Iteração 28: SSE = 4109714.1692914041 (variação relativa = 1.4835858269e-04)
+Iteração 29: SSE = 4109138.4207757614 (variação relativa = 1.4009453989e-04)
+Iteração 30: SSE = 4108582.8928572056 (variação relativa = 1.3519328425e-04)
+Iteração 31: SSE = 4108052.5149900247 (variação relativa = 1.2909021943e-04)
+Iteração 32: SSE = 4107533.7032021051 (variação relativa = 1.2629142058e-04)
+Iteração 33: SSE = 4107086.1790912463 (variação relativa = 1.0895202406e-04)
+Iteração 34: SSE = 4106684.2035044506 (variação relativa = 9.7873667429e-05)
+Convergiu!
+
+=== Resultados ===
+Iterações executadas: 34
+SSE final: 4107086.1790912463
+Tempo total: 186.000 ms
+
+Resultados salvos em: results/assign_omp_16_large.csv e results/centroids_omp_16_large.csv
+
+=== SAÍDA PADRÃO ===
+N=1000000 K=16 max_iter=100 eps=1e-06 threads=16
+Iterações: 34 | SSE final: 4107086.179091 | Tempo: 186.0 ms
